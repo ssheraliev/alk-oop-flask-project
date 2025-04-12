@@ -1,2 +1,2 @@
-# alk-oop-flask-project
+# Mystical Tale Game
 ALK Advanced Machine Learning &amp; OOP Course Project

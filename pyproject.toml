@@ -1,0 +1,7 @@
+[project]
+name = "Mystical Tale Game"
+version = "0.1.0"
+description = "ALK Advanced Machine Learning &amp; OOP Course Project"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
