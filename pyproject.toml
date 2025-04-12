@@ -1,7 +1,9 @@
 [project]
-name = "Mystical Tale Game"
+name = "alk-oop-flask-project"
 version = "0.1.0"
-description = "ALK Advanced Machine Learning &amp; OOP Course project"
+description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "flask>=3.1.0",
+]
