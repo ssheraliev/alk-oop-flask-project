@@ -1,2 +1,2 @@
 # Mystical Tale Game
-ALK Advanced Machine Learning &amp; OOP Course Project
+ALK Advanced Machine Learning &amp; OOP Course project
