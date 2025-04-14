@@ -1,0 +1,116 @@
+body {
+    background-color: #f0ead6; /* Light beige for parchment background */
+    font-family: 'serif', serif;
+    color: #333; /* Dark text color */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.scroll-container {
+    background-color: #f8f4e8; /* Slightly lighter beige for the scroll */
+    border: 2px solid #a0885a; /* Brown border */
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    width: 80%;
+    max-width: 960px;
+}
+
+.scroll-content {
+    padding: 40px;
+}
+
+h1 {
+    color: #8b4513; /* Saddle brown for headings */
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+.character-info {
+    color: #556b2f; /* Dark olive green for character info */
+    margin-bottom: 20px;
+}
+
+.story-text {
+    background-color: #fffaf0; /* Floral white for inner parchment */
+    border: 1px solid #a0885a;
+    padding: 20px;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    font-size: 1.1em;
+    line-height: 1.6;
+    /* Standard serif for the story text */
+}
+
+.choices {
+    list-style: none;
+    padding: 0;
+    text-align: center;
+}
+
+.choices li {
+    margin-bottom: 15px;
+}
+
+.choice-button {
+    background-color: #b8860b;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+.choice-button:hover {
+    background-color: #daa520; /* Goldenrod on hover */
+}
+
+.save-options {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.save-options a {
+    color: #556b2f;
+    text-decoration: none;
+    margin: 0 10px;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+.save-options button {
+    background-color: #6b8e23;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+.save-options button:hover {
+    background-color: #8fbc8f; /* Dark sea green on hover */
+}
+
+label i.fa-solid {
+    margin-left: 5px;
+    color: #8b4513; /* Saddle brown */
+    font-size: 0.9em;
+}
+
+select option i.fa-solid {
+    margin-left: 8px;
+    font-size: 0.8em;
+    color: #556b2f; /* Dark olive green */
+}
