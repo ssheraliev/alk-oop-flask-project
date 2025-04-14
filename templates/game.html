@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Mystical Tale - Game{% endblock %}
+
+{% block content %}
+    <h1>Your Mystical Journey</h1>
+
+    {% if character %}
+    <div class="character-info">
+        <p>Name: {{ character.name }}</p>
+        <p>Race: {{ character.race }}</p>
+        <p>Archetype: {{ character.archetype }}</p>
+    </div>
+    {% endif %}
+
+    {% if current_node %}
+    <div class="story-text">
+        {{ current_node.text|replace('\n', '<br>')|safe }}
+    </div>
+
+    {% if current_node.choices %}
+    <ul class="choices">
+        {% for choice in current_node.choices %}
+        <li>
+            <form method="POST" action="{{ url_for('make_choice') }}">
+                <input type="hidden" name="choice_id" value="{{ choice.id }}">
+                <button type="submit" class="choice-button">{{ choice.text }}</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>The story continues...</p>
+    {% endif %}
+    {% else %}
+    <p>Error loading story content.</p>
+    {% endif %}
+
+    <div class="save-options">
+        <form method="POST" action="{{ url_for('save_game') }}">
+            <button type="submit">Save Game</button>
+        </form>
+        <p><a href="{{ url_for('load_saves') }}">Load Game</a></p>
+        <p><a href="{{ url_for('index') }}">Return to Main Menu</a></p>
+    </div>
+{% endblock %}
