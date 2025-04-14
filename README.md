@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mystical Tale is a web-based interactive game: players embark on a mystical journey and make choices that determine the course of the narrative. The game features tale style and allows players to create characters, progress through a branching storyline, and save their progress.
+Mystical Tale - Interactive Game, where you embark on a mystical journey and make choices that determine the course of the narrative. The game is based on tale style and allows you to create characters, progress through a branching storyline, and save your progress.
 
 ## Technologies Used
 
