@@ -284,28 +284,55 @@ def get_all_save_games():
         if conn:
             conn.close()
 
-# App Routes
+# Application routes
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/game')
 def game():
+    try:
+        character_id = session.get('character_id')
+        if character_id:
+            # If character is in session, get their info
+            character = get_character(character_id)
+            current_node_id = session.get('current_node_id', 'start')
+            current_node = get_story_node(current_node_id)
+            save_games = get_save_games_for_character(character_id)
+            
+            if not character or not current_node:
+                flash('Error loading character or story data. Please try again.')
+                return redirect(url_for('index'))
+            
+            return render_template(
+                'game.html',
+                character=character,
+                current_node=current_node,
+                save_games=save_games
+            )
+        else:
+            # If no character, redirect to character creation
+            return redirect(url_for('character_creation'))
+    except Exception as e:
+        app.logger.error(f"Error in game route: {e}")
+        app.logger.error(traceback.format_exc())
+        flash('An unexpected error occurred. Please try again.')
+        return redirect(url_for('index'))
 
-@app.route('/character_creation')
+@app.route('/character-creation', methods=['GET', 'POST'])
 def character_creation():
 
-@app.route('/make-choice')
+@app.route('/make-choice', methods=['POST'])
 def make_choice():
 
-@app.route('/save-game')
+@app.route('/save-game', methods=['POST'])
 def save_game():
 
-@app.route('/load_game/<save_id>')
+@app.route('/load-game/<save_id>')
 def load_game(save_id):
 
-@app.route('/load_saves')
+@app.route('/load-saves')
 def load_saves():
 
-@app.route('/clear_session')
-def clear_session():  
+@app.route('/clear-session')
+def clear_session():           
