@@ -200,7 +200,6 @@ def populate_story_nodes(cursor):
         app.logger.error(f"Error populating story nodes: {e}")
         raise
 
-# Database helper functions
 def get_character(character_id):
     conn = None
     try:
