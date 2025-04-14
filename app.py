@@ -335,4 +335,4 @@ def load_game(save_id):
 def load_saves():
 
 @app.route('/clear-session')
-def clear_session():           
+def clear_session():
