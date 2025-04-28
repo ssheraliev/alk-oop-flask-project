@@ -1,63 +1,57 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, get_flashed_messages
 import sqlite3
 import os
 import json
 from datetime import datetime
 import uuid
 import traceback
+import bcrypt
 
-app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Used for session management
-
-# DB directory
-os.makedirs('db', exist_ok=True)
 DATABASE_PATH = 'db/mystical_tale.db'
 
 # Database connection function
 def get_db_connection():
+    """establishes connection to DB"""
     conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row # access columns by name
     return conn
 
-# Database initialization
+# Database initialization function
 def init_db():
+    """init db tables & populate story content"""
     try:
-        os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
-        
+        print("Initializing database...")
+        db_dir = os.path.dirname(DATABASE_PATH)
+        os.makedirs(db_dir, exist_ok=True)
+
         conn = get_db_connection()
         c = conn.cursor()
-        
-        # characters table
+        print("DB connection established")
+
+        # users creation table
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+        print("'users' table creation executed")
+
+        # characters creation table
         c.execute('''
         CREATE TABLE IF NOT EXISTS characters (
             id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL, -- Foreign key linking to the users table
             name TEXT NOT NULL,
             race TEXT NOT NULL,
             archetype TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
         ''')
-        
-        # save_games table
-        c.execute('''
-        CREATE TABLE IF NOT EXISTS save_games (
-            id TEXT PRIMARY KEY,
-            character_id TEXT NOT NULL,
-            current_node_id TEXT NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            save_name TEXT NOT NULL,
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-        
-        # story_nodes table
-        c.execute('''
-        CREATE TABLE IF NOT EXISTS story_nodes (
-            id TEXT PRIMARY KEY,
-            text TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        ''')
+        print("'characters' table creation executed")
         
         # choices table linked to story nodes
         c.execute('''
