@@ -371,74 +371,73 @@ def create_app():
                 return redirect(url_for('index'))
 
                 
-    try:
-        character_id = session.get('character_id')
-        current_node_id = session.get('current_node_id')
-        
-        if not character_id or not current_node_id:
-            flash('Cannot save game: no active character or game state')
+            return render_template(
+                'game.html',
+                character=character,
+                current_node=current_node,
+                save_games=save_games,
+                flashed_messages=messages
+            )
+
+        except Exception as e:
+            print(f"Error in game route: {e}")
+            print(traceback.format_exc())
+            flash('An unexpected error occurred. Please try again.')
             return redirect(url_for('index'))
-        
-        # Get character info for the save name
-        character = get_character(character_id)
-        if not character:
-            flash('Error retrieving character information')
-            return redirect(url_for('game'))
-            
-        save_name = f"{character['name']}'s Journey - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO save_games (id, character_id, current_node_id, save_name) VALUES (?, ?, ?, ?)",
-            (str(uuid.uuid4()), character_id, current_node_id, save_name)
-        )
-        conn.commit()
-        conn.close()
-        
-        flash('Your journey has been preserved in the mystical archives')
-        return redirect(url_for('game'))
-    except Exception as e:
-        app.logger.error(f"Error in save_game: {e}")
-        app.logger.error(traceback.format_exc())
-        flash('An error occurred while saving your game. Please try again.')
-        return redirect(url_for('game'))
 
-@app.route('/load-game/<save_id>')
-def load_game(save_id):
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT * FROM save_games WHERE id = ?", (save_id,))
-        save_game = c.fetchone()
-        conn.close()
-        
-        if save_game:
-            # Setting character and node in session
-            session['character_id'] = save_game['character_id']
-            session['current_node_id'] = save_game['current_node_id']
-            flash('Your journey continues from where you left off')
-        else:
-            flash('Could not load the saved game')
-        
-        return redirect(url_for('game'))
-    except Exception as e:
-        app.logger.error(f"Error in load_game: {e}")
-        app.logger.error(traceback.format_exc())
-        flash('An error occurred while loading your game. Please try again.')
-        return redirect(url_for('load_saves'))
+    @app.route('/character-creation', methods=['GET', 'POST'])
+    def character_creation():
+        # ** checking if a user is logged in for both GET and POST **
+        user_id = session.get('user_id')
+        if not user_id:
+            flash('Please log in to create a character.')
+            return redirect(url_for('login'))
 
-@app.route('/load-saves')
-def load_saves():
-    try:
-        save_games = get_all_save_games()
-        return render_template('load_game.html', save_games=save_games)
-    except Exception as e:
-        app.logger.error(f"Error in load_saves: {e}")
-        app.logger.error(traceback.format_exc())
-        flash('An error occurred while retrieving saved games. Please try again.')
-        return redirect(url_for('index'))
+        if request.method == 'POST':
+            try:
+                name = request.form.get('name')
+                race = request.form.get('race')
+                archetype = request.form.get('archetype')
 
+                if not name or not race or not archetype:
+                    flash('All fields are required')
+                    return redirect(url_for('character_creation'))
+
+                character_id = str(uuid.uuid4())
+
+                conn = get_db_connection()
+                c = conn.cursor()
+                try:
+                    # user_id in the INSERT
+                    c.execute(
+                        "INSERT INTO characters (id, user_id, name, race, archetype) VALUES (?, ?, ?, ?, ?)",
+                        (character_id, user_id, name, race, archetype)
+                    )
+                    conn.commit()
+                    session['character_id'] = character_id
+                    session['current_node_id'] = 'start'
+
+                    flash(f'Welcome, {name}! Your mystical adventure awaits!')
+                    return redirect(url_for('game'))
+                except sqlite3.Error as e:
+                    conn.rollback()
+                    print(f"SQLite error in character creation: {e}")
+                    print(traceback.format_exc())
+                    flash('Database error occurred during character creation. Please try again.')
+                    return redirect(url_for('character_creation'))
+                finally:
+                    conn.close()
+            except Exception as e:
+                print(f"Unexpected error during character creation: {e}")
+                print(traceback.format_exc())
+                flash('An unexpected error occurred during character creation. Please try again.')
+                return redirect(url_for('character_creation'))
+
+        return render_template('character_creation.html')
+
+
+
+        
 @app.route('/clear-session')
 def clear_session():
     session.clear()
