@@ -116,46 +116,48 @@ def init_db():
         print("DB init failed due to unexpected error")
         raise
         
-        # clearing node
+# Story content initialization
+def populate_story_nodes(cursor):
+    """Populate story_nodes and choices table"""
+    try:
+        cursor.execute(
+            "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
+            ('start', 'You awaken in a clearing bathed in moonlight, your mind hazy with forgotten memories. The last thing you recall is following a strange light deep into the Whispering Woods.\n\nAll around you, ancient trees loom like silent guardians, their branches swaying gently as if communicating in a language long forgotten by mortal kind.\n\nA soft, melodic voice calls to you from the shadows: "Awakened one, you have crossed the threshold between worlds. The veil is thin tonight, and your destiny awaits."')
+        )
+
+        # adding choices -> start node
+        choices = [
+            ('c1', 'start', 'Call out to the mysterious voice', 'voice_response'),
+            ('c2', 'start', 'Examine your surroundings more carefully', 'examine_clearing'),
+            ('c3', 'start', 'Try to remember how you got here', 'remember_path')
+        ]
+        cursor.executemany(
+            "INSERT INTO choices (id, node_id, text, next_node_id) VALUES (?, ?, ?, ?)",
+            choices
+        )
+
+        # response node
+        cursor.execute(
+            "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
+            ('voice_response', '"Who\'s there?" you call into the darkness, your voice echoing strangely among the trees.\n\nA figure emerges from the shadows—a woman with skin like polished alabaster and eyes that shift colors like opals in the moonlight. Her hair floats around her as if suspended in water, and her flowing garments seem woven from starlight itself.\n\n"I am Elysia, Guardian of the Threshold," she says, her voice resonating in your mind rather than your ears. "Few mortals find their way here, and fewer still are chosen by the Whispering Woods."')
+        )
+
+        # choices for response node
+        choices = [
+            ('c4', 'voice_response', '"Chosen? What do you mean I was chosen?"', 'chosen_explanation'),
+            ('c5', 'voice_response', '"Where exactly am I? What is this place?"', 'place_explanation'),
+            ('c6', 'voice_response', '"I need to return home immediately."', 'return_home')
+        ]
+        cursor.executemany(
+            "INSERT INTO choices (id, node_id, text, next_node_id) VALUES (?, ?, ?, ?)",
+            choices
+        )
+
         cursor.execute(
             "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
             ('examine_clearing', 'You take a moment to study your surroundings more carefully. The clearing is perfectly circular, as if carved with purpose rather than formed by nature. Small luminescent mushrooms form a ring around its edge, pulsing with a gentle blue light.\n\nAt the center, where you awoke, the grass forms an intricate spiral pattern that seems to glow faintly under the moonlight. You notice strange symbols etched into the surrounding trees—ancient runes that seem to shimmer when you focus directly on them.\n\nA small stone altar stands at the far edge of the clearing, covered in moss and bearing a small silver bowl filled with clear liquid that reflects the stars above with impossible clarity.')
         )
-        
-        # adding choices for clearing node
-        choices = [
-            ('c7', 'examine_clearing', 'Approach the stone altar', 'approach_altar'),
-            ('c8', 'examine_clearing', 'Examine the glowing mushroom ring', 'examine_mushrooms'),
-            ('c9', 'examine_clearing', 'Study the strange runes on the trees', 'study_runes')
-        ]
-        cursor.executemany(
-            "INSERT INTO choices (id, node_id, text, next_node_id) VALUES (?, ?, ?, ?)",
-            choices
-        )
-        
-        # Keep path node for the record
-        cursor.execute(
-            "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
-            ('remember_path', 'You close your eyes, focusing on the fragments of memory that drift through your mind like autumn leaves on a stream.\n\nYou recall walking home along your usual path when a strange light—like a lantern but with a flame of shifting colors—appeared among the trees. Something about it called to you, compelling you to follow as it danced just beyond your reach.\n\nDeeper and deeper it led you into the woods, until the path disappeared and the trees grew ancient and strange. The air became thick with the scent of moss and night-blooming flowers, and faint music seemed to play from nowhere and everywhere.\n\nThen came a threshold—a sensation of passing through a veil of cool mist—and then... darkness, until you awoke here in this clearing.')
-        )
-        
-        # Add choices for path node
-        choices = [
-            ('c10', 'remember_path', 'Try to find the path you came from', 'find_path'),
-            ('c11', 'remember_path', 'Call out for help', 'call_help'),
-            ('c12', 'remember_path', 'Look for the colored light you followed', 'seek_light')
-        ]
-        cursor.executemany(
-            "INSERT INTO choices (id, node_id, text, next_node_id) VALUES (?, ?, ?, ?)",
-            choices
-        )
-        
-        # Chosen explanation node
-        cursor.execute(
-            "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
-            ('chosen_explanation', 'Elysia\'s smile is both warm and mysterious. "The Woods have a consciousness all their own—ancient and inscrutable. They do not call to mortals without purpose."\n\nShe gestures to the trees around you, which seem to lean in slightly as if listening.\n\n"There is an imbalance growing between your world and ours. The boundaries weaken, and creatures that should remain in shadow have begun to cross. The Woods sensed something in you—a potential, a key perhaps—that might help restore what has been broken."\n\nShe extends her hand, a small pendant dangling from her fingers. It appears to be a silver leaf veined with luminescent blue.\n\n"This imbalance threatens both our realms. Will you help us discover what causes it and set things right?"')
-        )
-        
+
         # Add choices for chosen_explanation node
         choices = [
             ('c13', 'chosen_explanation', 'Accept the pendant and offer your help', 'accept_quest'),
