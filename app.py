@@ -87,34 +87,34 @@ def init_db():
         )
         ''')
         
-        print("'choices' table creation executed")
-        # adding choices for start node
-        choices = [
-            ('c1', 'start', 'Call out to the mysterious voice', 'voice_response'),
-            ('c2', 'start', 'Examine your surroundings more carefully', 'examine_clearing'),
-            ('c3', 'start', 'Try to remember how you got here', 'remember_path')
-        ]
-        cursor.executemany(
-            "INSERT INTO choices (id, node_id, text, next_node_id) VALUES (?, ?, ?, ?)",
-            choices
-        )
-        
-        # voice response node
-        cursor.execute(
-            "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
-            ('voice_response', '"Who\'s there?" you call into the darkness, your voice echoing strangely among the trees.\n\nA figure emerges from the shadows—a woman with skin like polished alabaster and eyes that shift colors like opals in the moonlight. Her hair floats around her as if suspended in water, and her flowing garments seem woven from starlight itself.\n\n"I am Elysia, Guardian of the Threshold," she says, her voice resonating in your mind rather than your ears. "Few mortals find their way here, and fewer still are chosen by the Whispering Woods."')
-        )
-        
-        # adding choices for voice_response node
-        choices = [
-            ('c4', 'voice_response', '"Chosen? What do you mean I was chosen?"', 'chosen_explanation'),
-            ('c5', 'voice_response', '"Where exactly am I? What is this place?"', 'place_explanation'),
-            ('c6', 'voice_response', '"I need to return home immediately."', 'return_home')
-        ]
-        cursor.executemany(
-            "INSERT INTO choices (id, node_id, text, next_node_id) VALUES (?, ?, ?, ?)",
-            choices
-        )
+        # initial story nodes population (if not done already)
+        c.execute("SELECT COUNT(*) FROM story_nodes")
+        if c.fetchone()[0] == 0:
+            print("Populating initial story nodes...")
+            populate_story_nodes(c)
+        else:
+            print("Story nodes already populated")
+
+        conn.commit()
+        print("Database connection committed")
+        conn.close()
+        print("DB init finished successfully")
+    except sqlite3.Error as e:
+        print(f"DB init error: {e}")
+        print(traceback.format_exc())
+        if conn:
+            conn.rollback()
+            conn.close()
+        print("DB init failed due to SQLite error")
+        raise
+    except Exception as e:
+        print(f"An unexpected error occurred during database initialization: {e}")
+        print(traceback.format_exc())
+        if conn:
+            conn.rollback()
+            conn.close()
+        print("DB init failed due to unexpected error")
+        raise
         
         # clearing node
         cursor.execute(
