@@ -435,26 +435,77 @@ def create_app():
 
         return render_template('character_creation.html')
 
+    @app.route('/make-choice', methods=['POST'])
+    def make_choice():
+        try:
+            if not session.get('character_id'):
+                return redirect(url_for('character_creation'))
 
+            choice_id = request.form.get('choice_id')
 
-        
-@app.route('/clear-session')
-def clear_session():
-    session.clear()
-    return redirect(url_for('index'))
+            if not choice_id:
+                flash('Invalid choice')
+                return redirect(url_for('game'))
 
-# Adding error handler for 500 error messages
-@app.errorhandler(500)
-def internal_error(error):
-    app.logger.error(f"500 error: {error}")
-    app.logger.error(traceback.format_exc())
-    return render_template('error.html', error="A mystical disturbance has occurred. The arcane energies require rebalancing."), 500
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("SELECT next_node_id FROM choices WHERE id = ?", (choice_id,))
+            choice = c.fetchone()
+            conn.close()
 
-# Adding error handler for 404 error message
-@app.errorhandler(404)
-def not_found_error(error):
-    return render_template('error.html', error="The path you seek does not exist in this realm."), 404
+            if choice:
+                session['current_node_id'] = choice['next_node_id']
+                # ** flashing a new message to indicate choice was made **
+                flash('Your choice has been made.')
 
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True)
+            return redirect(url_for('game'))
+        except Exception as e:
+            print(f"Error in make_choice: {e}")
+            print(traceback.format_exc())
+            flash('An error occurred while processing your choice. Please try again.')
+            return redirect(url_for('game'))
+
+    @app.route('/save-game', methods=['POST'])
+    def save_game():
+        try:
+            character_id = session.get('character_id')
+            current_node_id = session.get('current_node_id')
+            save_name = request.form.get('save_name')
+
+            if not save_name:
+                 flash('Please provide a name for your save.')
+                 return redirect(url_for('game'))
+
+            if not character_id or not current_node_id:
+                flash('Cannot save game: no active character or game state')
+                return redirect(url_for('index'))
+
+            character = get_character(character_id)
+            if not character:
+                flash('Error retrieving character information')
+                return redirect(url_for('game'))
+
+            conn = get_db_connection()
+            c = conn.cursor()
+            try:
+                # ** save_name in the INSERT **
+                c.execute(
+                    "INSERT INTO save_games (id, character_id, current_node_id, save_name) VALUES (?, ?, ?, ?)",
+                    (str(uuid.uuid4()), character_id, current_node_id, save_name)
+                )
+                conn.commit()
+                flash(f'Your journey has been preserved as "{save_name}" in the mystical archives')
+                return redirect(url_for('game'))
+            except sqlite3.Error as e:
+                conn.rollback()
+                print(f"SQLite error in save_game: {e}")
+                print(traceback.format_exc())
+                flash('Database error occurred while saving your game. Please try again.')
+                return redirect(url_for('game'))
+            finally:
+                conn.close()
+        except Exception as e:
+            print(f"Error in save_game: {e}")
+            print(traceback.format_exc())
+            flash('An unexpected error occurred while saving your game. Please try again.')
+            return redirect(url_for('game'))
