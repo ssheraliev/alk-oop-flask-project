@@ -357,19 +357,20 @@ def create_app():
                  return redirect(url_for('character_creation'))
 
 
-        if choice:
-            # Update current node in session
-            session['current_node_id'] = choice['next_node_id']
-        
-        return redirect(url_for('game'))
-    except Exception as e:
-        app.logger.error(f"Error in make_choice: {e}")
-        app.logger.error(traceback.format_exc())
-        flash('An error occurred while processing your choice. Please try again.')
-        return redirect(url_for('game'))
+            # proceed to get game data
+            character = get_character(character_id)
+            current_node_id = session.get('current_node_id', 'start')
+            current_node = get_story_node(current_node_id)
+            save_games = get_save_games_for_character(character_id)
 
-@app.route('/save-game', methods=['POST'])
-def save_game():
+            if not character or not current_node:
+                flash('Error loading character or story data. Please try again.')
+                # session character info clearance if data is invalid
+                session.pop('character_id', None)
+                session.pop('current_node_id', None)
+                return redirect(url_for('index'))
+
+                
     try:
         character_id = session.get('character_id')
         current_node_id = session.get('current_node_id')
