@@ -321,46 +321,42 @@ def get_all_save_games_for_user(user_id):
         if conn:
             conn.close()
 
-                # Setting character and starting node in session
-                session['character_id'] = character_id
-                session['current_node_id'] = 'start'
-                
-                flash(f'Welcome, {name}! Your mystical adventure awaits!')
-                return redirect(url_for('game'))
-            except sqlite3.Error as e:
-                conn.rollback()
-                app.logger.error(f"SQLite error in character creation: {e}")
-                app.logger.error(traceback.format_exc())
-                flash('Database error occurred. Please try again.')
-                return redirect(url_for('character_creation'))
-            finally:
-                conn.close()
-        except Exception as e:
-            app.logger.error(f"Unexpected error in character creation: {e}")
-            app.logger.error(traceback.format_exc())
-            flash('An unexpected error occurred. Please try again.')
-            return redirect(url_for('character_creation'))
-    
-    return render_template('character_creation.html')
+# Main application factory function
+def create_app():
+    """function to create and configure the Flask"""
+    app = Flask(__name__)
+    app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
-@app.route('/make-choice', methods=['POST'])
-def make_choice():
-    try:
-        if not session.get('character_id'):
-            return redirect(url_for('character_creation'))
-        
-        choice_id = request.form.get('choice_id')
-        
-        if not choice_id:
-            flash('Invalid choice')
-            return redirect(url_for('game'))
-        
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT next_node_id FROM choices WHERE id = ?", (choice_id,))
-        choice = c.fetchone()
-        conn.close()
-        
+    # DB init when the app context is ready
+    with app.app_context():
+        init_db()
+
+    # --- defining each route ---
+
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+
+    @app.route('/game')
+    def game():
+        try:
+            messages = get_flashed_messages()
+            print(f"Debug: Messages retrieved in /game route: {messages}")
+
+            user_id = session.get('user_id')
+            if not user_id:
+                flash('Please log in to play the game.')
+                return redirect(url_for('login'))
+
+            character_id = session.get('character_id')
+
+            # checking if a character is selected for the logged-in user **
+            if not character_id:
+                 # If logged in but there is no character, redirects to character creation
+                 flash('Please select or create a character to play.')
+                 return redirect(url_for('character_creation'))
+
+
         if choice:
             # Update current node in session
             session['current_node_id'] = choice['next_node_id']
