@@ -53,6 +53,29 @@ def init_db():
         ''')
         print("'characters' table creation executed")
         
+ # save_games table
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS save_games (
+            id TEXT PRIMARY KEY,
+            character_id TEXT NOT NULL,
+            current_node_id TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            save_name TEXT NOT NULL,
+            FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+        ''')
+        print("'save_games' table creation executed")
+
+        # story_nodes table
+        c.execute('''
+        CREATE TABLE IF NOT EXISTS story_nodes (
+            id TEXT PRIMARY KEY,
+            text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+        print("'story_nodes' table creation executed")
+
         # choices table linked to story nodes
         c.execute('''
         CREATE TABLE IF NOT EXISTS choices (
@@ -64,31 +87,7 @@ def init_db():
         )
         ''')
         
-        # initial story nodes population - if not done already
-        c.execute("SELECT COUNT(*) FROM story_nodes")
-        if c.fetchone()[0] == 0:
-            populate_story_nodes(c)
-        
-        conn.commit()
-        conn.close()
-        app.logger.info("Database initialized successfully")
-    except sqlite3.Error as e:
-        app.logger.error(f"Database initialization error: {e}")
-        app.logger.error(traceback.format_exc())
-        if conn:
-            conn.rollback()
-            conn.close()
-        raise
-
-# story content initialization
-def populate_story_nodes(cursor):
-    try:
-        # start node
-        cursor.execute(
-            "INSERT INTO story_nodes (id, text) VALUES (?, ?)",
-            ('start', 'You awaken in a clearing bathed in moonlight, your mind hazy with forgotten memories. The last thing you recall is following a strange light deep into the Whispering Woods.\n\nAll around you, ancient trees loom like silent guardians, their branches swaying gently as if communicating in a language long forgotten by mortal kind.\n\nA soft, melodic voice calls to you from the shadows: "Awakened one, you have crossed the threshold between worlds. The veil is thin tonight, and your destiny awaits."')
-        )
-        
+        print("'choices' table creation executed")
         # adding choices for start node
         choices = [
             ('c1', 'start', 'Call out to the mysterious voice', 'voice_response'),
