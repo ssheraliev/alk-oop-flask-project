@@ -229,23 +229,58 @@ def populate_story_nodes(cursor):
         raise
 
 
-        # Get the choices for the node
+# Database helper functions
+def get_character(character_id):
+    """fetching a character by their ID"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
+        character = c.fetchone()
+        if character:
+            return dict(character)
+        return None
+    except sqlite3.Error as e:
+        print(f"Database error in get_character: {e}")
+        print(traceback.format_exc())
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+def get_story_node(node_id):
+    """fetching story node and associated choices by node ID"""
+    conn = None
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # getting node text
+        c.execute("SELECT * FROM story_nodes WHERE id = ?", (node_id,))
+        node = c.fetchone()
+
+        if not node:
+            return None
+
+        # getting choices for the node
         c.execute("SELECT * FROM choices WHERE node_id = ?", (node_id,))
         choices = c.fetchall()
-        
+
         result = dict(node)
         result['choices'] = [dict(choice) for choice in choices]
-        
+
         return result
     except sqlite3.Error as e:
-        app.logger.error(f"Database error in get_story_node: {e}")
-        app.logger.error(traceback.format_exc())
+        print(f"Database error in get_story_node: {e}")
+        print(traceback.format_exc())
         return None
     finally:
         if conn:
             conn.close()
 
 def get_save_games_for_character(character_id):
+    """fetching save games for a specific character"""
     conn = None
     try:
         conn = get_db_connection()
@@ -254,92 +289,38 @@ def get_save_games_for_character(character_id):
         save_games = [dict(row) for row in c.fetchall()]
         return save_games
     except sqlite3.Error as e:
-        app.logger.error(f"Database error in get_save_games_for_character: {e}")
-        app.logger.error(traceback.format_exc())
+        print(f"Database error in get_save_games_for_character: {e}")
+        print(traceback.format_exc())
         return []
     finally:
         if conn:
             conn.close()
 
-def get_all_save_games():
+def get_all_save_games_for_user(user_id):
+    """fetching all save games for a specific user, including story snippet"""
     conn = None
     try:
         conn = get_db_connection()
         c = conn.cursor()
+        # query modification to join with characters and story_nodes
         c.execute("""
-            SELECT sg.*, c.name, c.race, c.archetype 
+            SELECT sg.*, c.name AS character_name, c.race, c.archetype, sn.text AS story_text_snippet
             FROM save_games sg
             JOIN characters c ON sg.character_id = c.id
+            JOIN story_nodes sn ON sg.current_node_id = sn.id -- Join with story_nodes
+            WHERE c.user_id = ? -- Filter by the logged-in user's ID
             ORDER BY sg.timestamp DESC
-        """)
+        """, (user_id,))
         save_games = [dict(row) for row in c.fetchall()]
         return save_games
     except sqlite3.Error as e:
-        app.logger.error(f"Database error in get_all_save_games: {e}")
-        app.logger.error(traceback.format_exc())
+        print(f"Database error in get_all_save_games_for_user: {e}")
+        print(traceback.format_exc())
         return []
     finally:
         if conn:
             conn.close()
 
-# Application Routes
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/game')
-def game():
-    try:
-        character_id = session.get('character_id')
-        if character_id:
-            # If character is in session, get its info
-            character = get_character(character_id)
-            current_node_id = session.get('current_node_id', 'start')
-            current_node = get_story_node(current_node_id)
-            save_games = get_save_games_for_character(character_id)
-            
-            if not character or not current_node:
-                flash('Error loading character or story data. Please try again.')
-                return redirect(url_for('index'))
-            
-            return render_template(
-                'game.html',
-                character=character,
-                current_node=current_node,
-                save_games=save_games
-            )
-        else:
-            # If no character is there, redirect to character creation
-            return redirect(url_for('character_creation'))
-    except Exception as e:
-        app.logger.error(f"Error in game route: {e}")
-        app.logger.error(traceback.format_exc())
-        flash('An unexpected error occurred. Please try again.')
-        return redirect(url_for('index'))
-
-@app.route('/character-creation', methods=['GET', 'POST'])
-def character_creation():
-    if request.method == 'POST':
-        try:
-            name = request.form.get('name')
-            race = request.form.get('race')
-            archetype = request.form.get('archetype')
-            
-            if not name or not race or not archetype:
-                flash('All fields are required')
-                return redirect(url_for('character_creation'))
-            
-            character_id = str(uuid.uuid4())
-            
-            conn = get_db_connection()
-            c = conn.cursor()
-            try:
-                c.execute(
-                    "INSERT INTO characters (id, name, race, archetype) VALUES (?, ?, ?, ?)",
-                    (character_id, name, race, archetype)
-                )
-                conn.commit()
-                
                 # Setting character and starting node in session
                 session['character_id'] = character_id
                 session['current_node_id'] = 'start'
