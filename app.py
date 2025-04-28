@@ -509,3 +509,113 @@ def create_app():
             print(traceback.format_exc())
             flash('An unexpected error occurred while saving your game. Please try again.')
             return redirect(url_for('game'))
+
+    @app.route('/load-game/<save_id>')
+    def load_game(save_id):
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute("SELECT * FROM save_games WHERE id = ?", (save_id,))
+            save_game = c.fetchone()
+            conn.close()
+
+            if save_game:
+                session['character_id'] = save_game['character_id']
+                session['current_node_id'] = save_game['current_node_id']
+                flash('Your journey continues from where you left off')
+            else:
+                flash('Could not load the saved game')
+
+            return redirect(url_for('game'))
+        except Exception as e:
+            print(f"Error in load_game: {e}")
+            print(traceback.format_exc())
+            flash('An error occurred while loading your game. Please try again.')
+            return redirect(url_for('load_saves'))
+
+    @app.route('/load-saves')
+    def load_saves():
+        try:
+            # checking if a user is logged in
+            user_id = session.get('user_id')
+            if not user_id:
+                flash('Please log in to view your saved games.')
+                return redirect(url_for('login'))
+
+            # ** get games for the logged-in user **
+            save_games = get_all_save_games_for_user(user_id)
+
+            return render_template('load_game.html', save_games=save_games)
+
+        except Exception as e:
+            print(f"Error in load_saves: {e}")
+            print(traceback.format_exc())
+            flash('An error occurred while retrieving saved games. Please try again.')
+            return redirect(url_for('index'))
+
+    @app.route('/signup', methods=['GET', 'POST'])
+    def signup():
+        if request.method == 'POST':
+            try:
+                username = request.form.get('username')
+                password = request.form.get('password')
+
+                if not username or not password:
+                    flash('Please provide both username and password.')
+                    return redirect(url_for('signup'))
+
+                conn = get_db_connection()
+                c = conn.cursor()
+
+                # checking if username already exists
+                c.execute("SELECT id FROM users WHERE username = ?", (username,))
+                existing_user = c.fetchone()
+
+                if existing_user:
+                    flash('Username already exists. Please pick a different name.')
+                    conn.close()
+                    return redirect(url_for('signup'))
+
+                # hashing password for user
+                hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+                # inserting new user into DB
+                c.execute(
+                    "INSERT INTO users (username, password) VALUES (?, ?)",
+                    (username, hashed_password)
+                )
+                conn.commit()
+                conn.close()
+
+                flash('Account created successfully! Please log in.')
+                 # redirecting to login once signup is complete
+                return redirect(url_for('login'))
+
+            except sqlite3.Error as e:
+                if conn:
+                    conn.rollback()
+                    conn.close()
+                print(f"SQLite error during signup: {e}")
+                print(traceback.format_exc())
+                flash('Database error occurred during signup. Please try again.')
+                return redirect(url_for('signup'))
+            except Exception as e:
+                print(f"Unexpected error during signup: {e}")
+                print(traceback.format_exc())
+                flash('An unexpected error occurred during signup. Please try again.')
+                return redirect(url_for('signup'))
+
+        return render_template('signup.html')
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+
+            if not username or not password:
+                flash('Please provide both username and password.')
+                return redirect(url_for('login'))
+
+            conn = get_db_connection()
+            c = conn.cursor()
