@@ -121,3 +121,148 @@ h2 {
     transition: background-color 0.3s ease;
     font-family: 'Sirin Stencil', cursive;
 }
+
+.save-options button[type="submit"]:hover {
+    background-color: #8fbc8f;
+}
+
+.save-options a {
+    color: #556b2f;
+    text-decoration: none;
+    margin: 0 10px;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+label i.fa-solid {
+    margin-left: 5px;
+    color: #8b4513;
+    font-size: 0.9em;
+}
+
+select option i.fa-solid {
+    margin-left: 8px;
+    font-size: 0.8em;
+    color: #556b2f;
+}
+
+/* authentication links */
+.auth-links {
+    margin-top: 20px;
+    text-align: center;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+.auth-links a {
+    color: #556b2f;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+    color: #8b4513;
+}
+
+/* flashed messages */
+ul.flashes {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    text-align: center;
+    color: #8b4513;
+    font-weight: bold;
+}
+
+/* saved games list for "Load Game" page */
+.saved-games-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px auto;
+    max-width: 80%;
+    color: #333;
+}
+
+.save-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #a0885a;
+    position: relative;
+}
+
+.save-item:last-child {
+    border-bottom: none;
+}
+
+/* custom bullet point */
+.save-item::before {
+    content: '\2022';
+    color: #556b2f;
+    font-size: 1.5em;
+    margin-right: 10px;
+}
+
+.save-details {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.save-details a {
+    color: #556b2f;
+    text-decoration: none;
+    font-family: 'serif', serif;
+    font-size: 1em;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.save-details a:hover {
+    text-decoration: underline;
+    color: #8b4513;
+}
+
+.save-name {
+    font-weight: bold;
+}
+
+.save-timestamp {
+    font-size: 0.9em;
+    color: #666;
+    margin-left: 10px;
+}
+
+.save-character {
+     font-size: 0.9em;
+     color: #666;
+     margin-left: 10px;
+}
+
+
+.story-snippet {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* delete button */
+.delete-form {
+    flex-shrink: 0;
+}
+
+.delete-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.8em;
+    transition: background-color 0.3s ease;
+    font-family: 'Sirin Stencil', cursive;
+}
+
+.delete-button:hover {
+    background-color: #c82333;
+}
