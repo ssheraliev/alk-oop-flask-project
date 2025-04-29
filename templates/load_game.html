@@ -12,7 +12,7 @@
                     <div class="save-details">
                         {# Link to load the game #}
                         <a href="{{ url_for('load_game', save_id=save.id) }}">
-                            {# Display the save name and timestamp #}
+                            {# name of saved game and timestamp #}
                             <span class="save-name">{{ save.save_name }}</span>
                             <span class="save-timestamp">Saved on {{ save.timestamp }}</span>
                             {% if save.character_name %}
