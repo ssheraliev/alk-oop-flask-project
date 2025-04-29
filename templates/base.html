@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sirin+Stencil&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" 
-    integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+    integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g=="
     crossorigin="anonymous" referrerpolicy="no-referrer" />
     {% block head %}
     {% endblock %}
@@ -16,8 +16,37 @@
 <body>
     <div class="scroll-container">
         <div class="scroll-content">
+
+            {% set messages = flashed_messages if flashed_messages is defined else get_flashed_messages() %}
+
+            {% if messages %}
+                <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+
+
             {% block content %}
+            {# main content #}
             {% endblock %}
+
+            {# authentication and main navigation links #}
+            <div class="auth-links">
+                {% if session.get('user_id') %}
+                    {# user is logged in #}
+                    <p>Welcome! <a href="{{ url_for('logout') }}">Log Out</a></p>
+                    <p><a href="{{ url_for('game') }}">Continue/Start Journey</a> | <a href="{{ url_for('load_saves') }}">Load Saved Game</a></p>
+                    {# user dashboard or character selection page for later use #}
+
+                {% else %}
+                    {# User is logged out #}
+                    <p>Already a hero? <a href="{{ url_for('login') }}">Log In</a></p>
+                    <p>New adventurer? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+                {% endif %}
+            </div>
+
         </div>
     </div>
 </body>

@@ -4,9 +4,38 @@
 
 {% block content %}
     <h2>Load Your Saved Game</h2>
-    <ul>
-        <li><a href="#">Save 1 - [Timestamp]</a></li>
-        <li><a href="#">Save 2 - [Timestamp]</a></li>
+
+    {% if save_games %}
+        <ul class="saved-games-list">
+            {% for save in save_games %}
+                <li class="save-item">
+                    <div class="save-details">
+                        {# Link to load the game #}
+                        <a href="{{ url_for('load_game', save_id=save.id) }}">
+                            {# Display the save name and timestamp #}
+                            <span class="save-name">{{ save.save_name }}</span>
+                            <span class="save-timestamp">Saved on {{ save.timestamp }}</span>
+                            {% if save.character_name %}
+                                <span class="save-character">({{ save.character_name }}, {{ save.race }} {{ save.archetype }})</span>
+                            {% endif %}
+                        </a>
+                        {% if save.story_text_snippet %}
+                            <div class="story-snippet">
+                                {{ save.story_text_snippet[:150] }}{% if save.story_text_snippet|length > 150 %}...{% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <form method="POST" action="{{ url_for('delete_save', save_id=save.id) }}" class="delete-form">
+                        <button type="submit" class="delete-button">Delete</button>
+                    </form>
+                </li>
+            {% endfor %}
         </ul>
+    {% else %}
+        <p>No saved games found for your account.</p>
+    {% endif %}
+
     <p><a href="{{ url_for('index') }}">Back to Main Menu</a></p>
+
 {% endblock %}
