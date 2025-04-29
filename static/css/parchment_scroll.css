@@ -266,3 +266,19 @@ ul.flashes {
 .delete-button:hover {
     background-color: #c82333;
 }
+
+/* LLM play mode - return button */
+.return-button {
+    background-color: #4B0082;
+    color: #fff;
+    border: 1px solid #3a0066;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+.return-button:hover {
+    background-color: #5a0099;
+}

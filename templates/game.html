@@ -13,30 +13,82 @@
     </div>
     {% endif %}
 
-    {% if current_node %}
-    <div class="story-text">
-        {{ current_node.text|replace('\n', '<br>')|safe }}
-    </div>
+    {# story content (pre-defined or LLM generated) #}
+    {% if story_text_to_display %}
+        <div class="story-text">
+            {{ story_text_to_display|replace('\n', '<br>')|safe }}
+        </div>
+    {% else %}
+        <p>Error loading story content.</p>
+    {% endif %}
 
-    {% if current_node.choices %}
-    <ul class="choices">
-        {% for choice in current_node.choices %}
-        <li>
-            <form method="POST" action="{{ url_for('make_choice') }}">
-                <input type="hidden" name="choice_id" value="{{ choice.id }}">
-                <button type="submit" class="choice-button">{{ choice.text }}</button>
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>The story continues...</p>
+    {# choices (pre-defined or LLM generated) #}
+    {% if choices_to_display %}
+        <ul class="choices">
+            {% for choice in choices_to_display %}
+            <li>
+                {# checking if it's pre-defined or LLM generated #}
+                {% if current_node_id != 'dynamic' %}
+                    {# pre-defined choice form #}
+                    <form method="POST" action="{{ url_for('make_choice') }}">
+                        <input type="hidden" name="choice_id" value="{{ choice.id }}">
+                        <button type="submit" class="choice-button">{{ choice.text }}</button>
+                    </form>
+                {% else %}
+                     {# LLM generated choice form - submits to roll_the_dice #}
+                     <form method="POST" action="{{ url_for('roll_the_dice') }}">
+                         {# passing LLM generated choice text to the next LLM API call #}
+                         <input type="hidden" name="chosen_dynamic_choice" value="{{ choice.text }}">
+                         <button type="submit" class="choice-button">{{ choice.text }}</button>
+                     </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+
+            {# --- adding "Roll the dice!" button for the 'seek_light' node --- #}
+            {# it appears as a list item in choices list #}
+            {% if current_node_id != 'dynamic' and current_node_id == 'seek_light' %}
+            <li>
+                 <form method="POST" action="{{ url_for('roll_the_dice') }}">
+                     <button type="submit" class="choice-button">Roll the dice!</button>
+                 </form>
+            </li>
+            {% endif %}
+            {# --------------------------------------------------------------------------------- #}
+        </ul>
+    {% elif current_node_id != 'dynamic' %} {# if no choices for pre-defined node #}
+        <p>There are no clear paths forward from here...</p>
+        {# if pre-defined node has no choices, app starts showing the "Roll the dice" button #}
+        {# it is a fallback in case we forgot to add the conditional check above for a node #}
+        {# however, we can control where 'Roll the dice' appears using this check #}
+        {% if current_node_id != 'dynamic' and current_node_id == 'seek_light' %}
+             <div class="roll-dice-option">
+                  <form method="POST" action="{{ url_for('roll_the_dice') }}">
+                      <button type="submit" class="choice-button">Roll the dice!</button>
+                  </form>
+             </div>
+        {% endif %}
+    {% else %} {# if LLM generated, but no choices #}
+         <p>The dynamic story ends here for now...</p>
     {% endif %}
-    {% else %}
-    <p>Error loading story content.</p>
+
+    {# --- option to return to the initial path when we play LLM generated game --- #}
+    {% if current_node_id == 'dynamic' %}
+         <div class="return-static-option">
+              {# Changed from <a> to a <form> with a <button> #}
+              <form method="GET" action="{{ url_for('return_to_static') }}">
+                  {# adding a class for css - .return-button #}
+                  <button type="submit" class="choice-button return-button">Return to initial Journey</button>
+              </form>
+         </div>
     {% endif %}
+    {# ----------------------------------------------------------------- #}
+
+
+    {# save game and authentication #}
 
     <div class="save-options">
+        {# saving the game with a name #}
         <form method="POST" action="{{ url_for('save_game') }}">
             <div class="save-input-group">
                 <label for="save_name">Provide a name:</label>
@@ -44,7 +96,7 @@
                 <button type="submit" class="save-button">Save Game</button>
             </div>
         </form>
-        {# Existing links #}
+        {# extra links - load & return to main #}
         <p><a href="{{ url_for('load_saves') }}">Load Game</a></p>
         <p><a href="{{ url_for('index') }}">Return to Main Menu</a></p>
     </div>
