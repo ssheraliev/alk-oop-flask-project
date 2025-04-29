@@ -619,3 +619,96 @@ def create_app():
 
             conn = get_db_connection()
             c = conn.cursor()
+
+            # request to get user from the database
+            c.execute("SELECT * FROM users WHERE username = ?", (username,))
+            user = c.fetchone()
+            conn.close()
+
+            if user:
+                # password verification
+                if bcrypt.checkpw(password.encode('utf-8'), user['password']):
+                    # if password is correct, letting user in
+                    session['user_id'] = user['id']
+                    flash(f'Welcome back, {user["username"]}!')
+                    # redirecting to game page
+                    return redirect(url_for('game'))
+                else:
+                    # if password is incorrect
+                    flash('Invalid username or password.')
+                    return redirect(url_for('login'))
+            else:
+                # if user is not found
+                flash('Invalid username or password.')
+                return redirect(url_for('login'))
+
+        return render_template('login.html')
+
+
+    @app.route('/logout')
+    def logout():
+        session.pop('user_id', None)
+        flash('You have been logged out.')
+        return redirect(url_for('index'))
+
+    @app.route('/delete-save/<save_id>', methods=['POST'])
+    def delete_save(save_id):
+        try:
+            user_id = session.get('user_id')
+            if not user_id:
+                flash('Please log in to delete saved games.')
+                return redirect(url_for('login'))
+
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # ** verification if saved game belongs to logged-in user **
+            c.execute("""
+                SELECT sg.id
+                FROM save_games sg
+                JOIN characters c ON sg.character_id = c.id
+                WHERE sg.id = ? AND c.user_id = ?
+            """, (save_id, user_id))
+            save_to_delete = c.fetchone()
+
+            if save_to_delete:
+                # in case, saved game exists and belongs to the user, letting to delete it
+                c.execute("DELETE FROM save_games WHERE id = ?", (save_id,))
+                conn.commit()
+                flash('Saved game deleted successfully.')
+            else:
+                # in case of saved game doesn't exist or doesn't belong to the user
+                flash('Could not delete the specified saved game.')
+
+            conn.close()
+
+            return redirect(url_for('load_saves'))
+        except Exception as e:
+            print(f"Error in delete_save route: {e}")
+            print(traceback.format_exc())
+            flash('An error occurred while deleting the saved game. Please try again.')
+            return redirect(url_for('load_saves'))
+
+
+    @app.route('/clear-session')
+    def clear_session():
+        session.clear()
+        return redirect(url_for('index'))
+
+    # error handler for 500 error messages
+    @app.errorhandler(500)
+    def internal_error(error):
+        print(f"500 error: {error}")
+        print(traceback.format_exc())
+        return render_template('error.html', error="A mystical disturbance has occurred. The arcane energies require rebalancing."), 500
+
+    # error handler for 404 error message
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('error.html', error="The path you seek does not exist in this realm."), 404
+
+    return app
+
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)
